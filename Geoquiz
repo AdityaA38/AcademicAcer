@@ -1,0 +1,103 @@
+import SwiftUI
+
+struct Question {
+    let text: String
+    let options: [String]
+    let correctAnswer: String
+}
+
+struct GeometryQuizView: View {
+    let topic: String
+
+    @State private var questions: [Question] = [
+        Question(text: "How many sides does a hexagon have?", options: ["9", "5", "6", "7"], correctAnswer: "6"),
+        Question(text: "What is the sum of angles in a triangle?", options: ["90°", "180°", "270°", "360°"], correctAnswer: "180°"),
+        Question(text: "What shape has all sides equal and all angles equal?", options: ["Rectangle", "Rhombus", "Square", "Trapezoid"], correctAnswer: "Square"),
+        Question(text: "Which shape has only one pair of parallel sides?", options: ["Square", "Trapezoid", "Pentagon", "Hexagon"], correctAnswer: "Trapezoid"),
+        Question(text: "A right angle is how many degrees?", options: ["60°", "90°", "120°", "180°"], correctAnswer: "90°"),
+        Question(text: "What is the area formula of a rectangle?", options: ["2 × (L + W)", "L × W", "πr²", "½ × B × H"], correctAnswer: "L × W"),
+        Question(text: "Which shape has exactly 5 sides?", options: ["Pentagon", "Hexagon", "Octagon", "Decagon"], correctAnswer: "Pentagon"),
+        Question(text: "How many faces does a cube have?", options: ["4", "6", "8", "12"], correctAnswer: "6"),
+        Question(text: "Which shape has no vertices?", options: ["Square", "Triangle", "Circle", "Hexagon"], correctAnswer: "Circle"),
+        Question(text: "What is the perimeter formula of a square?", options: ["4 × Side", "L × W", "2 × (L + W)", "π × Diameter"], correctAnswer: "4 × Side")
+    ]
+    
+    @State private var currentQuestionIndex = 0
+    @State private var score = 0
+    @State private var gameOver = false
+    
+    var body: some View {
+        ZStack {
+            // Background color
+            Color.blue.opacity(0.2)
+                .edgesIgnoringSafeArea(.all)
+            
+            VStack {
+                Text("Geometry Quiz Battle!")
+                    .font(.largeTitle)
+                    .bold()
+                    .padding()
+                
+                if gameOver {
+                    Text("Game Over! Final Score: \(score)")
+                        .font(.title)
+                        .padding()
+                    
+                    Button("Play Again") {
+                        restartGame()
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    
+                } else {
+                    Text(questions[currentQuestionIndex].text)
+                        .font(.title2)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                    
+                    ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
+                        Button(action: {
+                            checkAnswer(option)
+                        }) {
+                            Text(option)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(10)
+                                .shadow(radius: 5)
+                        }
+                        .padding(.horizontal, 30)
+                    }
+                    
+                    Text("Score: \(score)")
+                        .font(.title2)
+                        .padding(.top, 20)
+                }
+            }
+        }
+        // When the view disappears, add the points for this topic.
+        .onDisappear {
+            PointsManager.shared.addPoints(for: topic, points: score)
+        }
+    }
+    
+    private func checkAnswer(_ selectedAnswer: String) {
+        if selectedAnswer == questions[currentQuestionIndex].correctAnswer {
+            score += 1
+        }
+        
+        if currentQuestionIndex < questions.count - 1 {
+            currentQuestionIndex += 1
+        } else {
+            gameOver = true
+        }
+    }
+    
+    private func restartGame() {
+        currentQuestionIndex = 0
+        score = 0
+        gameOver = false
+    }
+}
