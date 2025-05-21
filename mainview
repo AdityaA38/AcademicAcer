@@ -1,0 +1,1251 @@
+import SwiftUI
+import AVFoundation
+
+
+struct ContentView: View {
+    var body: some View {
+        NavigationStack {
+            HomeView()
+        }
+    }
+}
+
+struct HomeView: View {
+    @StateObject private var soundManager = SoundManager()
+    @State private var isButtonTapped = false
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("Academic Acer")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(radius: 10)
+                    .padding(.top, 50)
+                
+                NavigationLink(destination: SubjectSelectionView()) {
+                    Text("Tap to Enter")
+                        .font(.title2)
+                        .bold()
+                        .padding()
+                        .frame(width: 200)
+                        .background(Color.white)
+                        .foregroundColor(.purple)
+                        .clipShape(Capsule())
+                        .shadow(radius: 5)
+                }
+                .simultaneousGesture(TapGesture().onEnded {
+                    soundManager.playSound()
+                })
+                .scaleEffect(isButtonTapped ? 1.1 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.5, blendDuration: 0), value: isButtonTapped)
+            }
+        }
+    }
+}
+
+
+class SoundManager: ObservableObject {
+    var player: AVAudioPlayer?
+    
+    init() {
+        if let sound = Bundle.main.url(forResource: "click", withExtension: "mp3") {
+            do {
+                player = try AVAudioPlayer(contentsOf: sound)
+                player?.prepareToPlay()
+            } catch {
+                print("Error loading sound: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    func playSound() {
+        player?.play()
+    }
+}
+
+
+struct SubjectSelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    @State private var showAIQuiz = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+
+            VStack(spacing: 40) {
+                Text("Brain Boost Hub")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .shadow(radius: 10)
+                    .padding(.top, 50)
+
+                VStack(spacing: 20) {
+                    NavigationLink(destination: MathSelectionView()) {
+                        SubjectButton(subject: "Math", icon: "function")
+                    }
+                    NavigationLink(destination: ScienceSelectionView()) {
+                        SubjectButton(subject: "Science", icon: "atom")
+                    }
+                    NavigationLink(destination: HistorySelectionView()) {
+                        SubjectButton(subject: "History", icon: "book.fill")
+                    }
+                    NavigationLink(destination: EnglishSelectionView()) {
+                        SubjectButton(subject: "English", icon: "text.book.closed")
+                    }
+                    NavigationLink(destination: GeographySelectionView()) {
+                        SubjectButton(subject: "Geography", icon: "map")
+                    }
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") {
+                    dismiss()
+                }
+                .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+
+
+
+    }
+}
+
+
+struct SubjectButton: View {
+    var subject: String
+    var icon: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(.white.opacity(0.7))
+            Text(subject)
+                .font(.title2)
+                .bold()
+                .foregroundColor(.white)
+        }
+        .frame(width: 250, height: 50)
+        .background(Color.white.opacity(0.2))
+        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .shadow(radius: 5)
+        .animation(.easeInOut(duration: 0.5), value: UUID())
+    }
+}
+
+// MARK: - Subject Topic Selections
+
+struct MathSelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("Math Courses")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 50)
+                
+                VStack(spacing: 20) {
+                    NavigationLink(destination: GameSelectionView(topic: "Algebra", isEnglish: false)) {
+                        SubjectButton(subject: "Algebra", icon: "x.squareroot")
+                    }
+                    NavigationLink(destination: GameSelectionView(topic: "Geometry", isEnglish: false)) {
+                        SubjectButton(subject: "Geometry", icon: "triangle")
+                    }
+                    NavigationLink(destination: GameSelectionView(topic: "Basic Math", isEnglish: false)) {
+                        SubjectButton(subject: "Basic Math", icon: "number.square")
+                    }
+                    // In GameSelectionView's VStack:
+                    
+                    
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+struct ScienceSelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("Science Courses")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 50)
+                
+                VStack(spacing: 20) {
+                    NavigationLink(destination: GameSelectionView(topic: "Physics", isEnglish: false)) {
+                        SubjectButton(subject: "Physics", icon: "atom")
+                    }
+                    NavigationLink(destination: GameSelectionView(topic: "Chemistry", isEnglish: false)) {
+                        SubjectButton(subject: "Chemistry", icon: "flask")
+                    }
+                    NavigationLink(destination: GameSelectionView(topic: "Biology", isEnglish: false)) {
+                        SubjectButton(subject: "Biology", icon: "leaf")
+                    }
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+struct HistorySelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("History Courses")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 50)
+                
+                VStack(spacing: 20) {
+                    NavigationLink(destination: GameSelectionView(topic: "World History", isEnglish: false)) {
+                        SubjectButton(subject: "World History", icon: "globe")
+                    }
+                    NavigationLink(destination: GameSelectionView(topic: "U.S. History", isEnglish: false)) {
+                        SubjectButton(subject: "U.S. History", icon: "flag")
+                    }
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+struct EnglishSelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("English Games")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 50)
+                
+                NavigationLink(destination: GameSelectionView(topic: "English", isEnglish: true)) {
+                    SubjectButton(subject: "English", icon: "text.book.closed")
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+struct GeographySelectionView: View {
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 40) {
+                Text("Geography Games")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 50)
+                
+                NavigationLink(destination: GameSelectionView(topic: "Geography", isEnglish: false)) {
+                    SubjectButton(subject: "Geography", icon: "map")
+                }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+
+struct GameSelectionView: View {
+    let topic: String
+    let isEnglish: Bool
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Same blue–purple gradient for consistency
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+            .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Text("\(topic) Games")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(.white)
+                
+                if topic == "Algebra" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                   NavigationLink(destination: AlgebraGameView()) {
+                        GameButton(title: "Algebra Attack")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                    
+                }
+                
+                
+                
+                
+                else if topic == "Biology" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: CellIdentificationGameView()) {
+                        GameButton(title: "Cell Explorer")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "U.S. History" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: USHistoryMatchGameView()) {
+                        GameButton(title: "President Matcher")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "World History" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination:ConquerTheWorldGameView()) {
+                        GameButton(title: "Conquer the World")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "Geometry" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: GeometryQuizView(topic:topic)) {
+                        GameButton(title: "Geo Quizzer")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "Basic Math" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: MathSpeedGameView()) {
+                        GameButton(title: "Math Mania")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "Chemistry" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: ElementMatchGameView()) {
+                        GameButton(title: "Element Explorer")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "Physics" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: PhysicsPuzzleGameView()) {
+                        GameButton(title: "Physics Puzzle")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "Geography" {
+                    NavigationLink(destination: JeopardyGameView(topic: topic)) {
+                        GameButton(title: "Jeopardy")
+                    }
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: CountryPinDropGameView()) {
+                        GameButton(title: "Pin Drop")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+                
+                else if topic == "English" {
+                    NavigationLink(destination: QuestionRacerView(topic: topic)) {
+                        GameButton(title: "Car Racer")
+                    }
+                    NavigationLink(destination: WordScrambleView()) {
+                        GameButton(title: "Word Scramble")
+                    }
+                    NavigationLink(destination: GrammarFixItView()) {
+                        GameButton(title: "Grammar Challenge")
+                    }
+                    NavigationLink(destination: WheelGameView(topic: topic)) {
+                        GameButton(title: "Wheel Game")
+                    }
+                    NavigationLink(destination: SubjectProgressView(subject: topic)) {
+                        Text("View Progress")
+                            .font(.headline)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            .padding()
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+struct GameButton: View {
+    var title: String
+    var body: some View {
+        Text(title)
+            .font(.title2)
+            .bold()
+            .padding()
+            .frame(width: 250, height: 50)
+            .background(Color.white.opacity(0.2))
+            .foregroundColor(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 15))
+            .shadow(radius: 5)
+    }
+}
+
+
+import SwiftUI
+
+struct JeopardyQuestion: Identifiable {
+    let id = UUID()
+    let question: String
+    let answer: String
+    let points: Int
+    var isAnswered: Bool = false
+}
+
+struct JeopardyGameView: View {
+    let topic: String
+    @Environment(\.dismiss) var dismiss
+    @State private var score = 0
+    @State private var questions: [JeopardyQuestion]
+    @State private var selectedQuestion: JeopardyQuestion? = nil
+    @State private var showQuestionModal = false
+    @State private var showFinalScoreModal = false
+
+    init(topic: String) {
+        self.topic = topic
+        _questions = State(initialValue: JeopardyData.questions(for: topic))
+    }
+    
+    var body: some View {
+        ZStack {
+            // Dark background
+            Color.black.opacity(0.9)
+                .ignoresSafeArea()
+            
+            VStack {
+                HStack {
+                    Text("Score: \(score)")
+                        .font(.title)
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding()
+                
+                // Display questions in rows by their point value.
+                ForEach([100,200,300,400,500], id: \.self) { point in
+                    HStack {
+                        ForEach(questions.filter { $0.points == point }) { question in
+                            Button(action: {
+                                selectedQuestion = question
+                                showQuestionModal = true
+                            }) {
+                                Text("\(question.points)")
+                                    .frame(width: 60, height: 60)
+                                    .background(question.isAnswered ? Color.gray : Color.blue)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(8)
+                            }
+                            .disabled(question.isAnswered)
+                        }
+                    }
+                }
+                Spacer()
+            }
+        }
+        // Present question detail modal.
+        .sheet(isPresented: $showQuestionModal, onDismiss: checkGameOver) {
+            if let q = selectedQuestion,
+               let index = questions.firstIndex(where: { $0.id == q.id }) {
+                JeopardyQuestionDetailView(question: q) { answeredCorrectly in
+                    if answeredCorrectly {
+                        score += q.points
+                    } else {
+                        score -= q.points
+                    }
+                    questions[index].isAnswered = true
+                    showQuestionModal = false
+                }
+            }
+        }
+        // Final score modal when all questions are answered.
+        .sheet(isPresented: $showFinalScoreModal) {
+            FinalScoreView(topic: topic, score: score, onPlayAgain: {
+                resetGame()
+            })
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+    
+    // Check if all questions have been answered.
+    private func checkGameOver() {
+        if questions.allSatisfy({ $0.isAnswered }) {
+            showFinalScoreModal = true
+        }
+    }
+    
+    // Reset the game for a new round.
+    private func resetGame() {
+        score = 0
+        questions = JeopardyData.questions(for: topic)
+        showFinalScoreModal = false
+    }
+}
+
+struct JeopardyQuestionDetailView: View {
+    let question: JeopardyQuestion
+    var onComplete: (Bool) -> Void
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text(question.question)
+                .font(.title)
+                .padding()
+                .foregroundColor(.white)
+            Text("Answer: \(question.answer)")
+                .foregroundColor(.gray)
+            
+            HStack(spacing: 30) {
+                Button("Correct") {
+                    onComplete(true)
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .clipShape(Capsule())
+                
+                Button("Wrong") {
+                    onComplete(false)
+                }
+                .padding()
+                .background(Color.red)
+                .foregroundColor(.white)
+                .clipShape(Capsule())
+            }
+        }
+        .padding()
+        .background(Color.black.opacity(0.9))
+        .cornerRadius(12)
+    }
+}
+
+struct FinalScoreView: View {
+    var score: Int
+    var onPlayAgain: () -> Void
+    var topic: String // Add this
+
+    init(topic: String, score: Int, onPlayAgain: @escaping () -> Void) {
+            self.topic = topic
+            self.score = score
+            self.onPlayAgain = onPlayAgain
+        }
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Game Over")
+                .font(.largeTitle)
+                .foregroundColor(.white)
+            Text("Your Final Score: \(score)")
+                .font(.title)
+                .foregroundColor(.white)
+            
+            Button("Play Again") {
+                onPlayAgain()
+            }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .clipShape(Capsule())
+        }
+        .padding()
+        .background(Color.black.opacity(0.9))
+        .cornerRadius(12)
+        .onAppear {
+                    // Add jeopardy points (divided by 100)
+                    let points = score / 100
+            PointsManager.shared.addPoints(for: self.topic, points: points)
+                }
+    }
+}
+
+struct JeopardyData {
+    static func questions(for topic: String) -> [JeopardyQuestion] {
+        switch topic {
+        case "Algebra":
+            return algebraQuestions
+        case "Geometry":
+            return geometryQuestions
+        case "Basic Math":
+            return basicMathQuestions
+        case "Physics":
+            return physicsQuestions
+        case "Chemistry":
+            return chemistryQuestions
+        case "Biology":
+            return biologyQuestions
+        case "World History":
+            return worldHistoryQuestions
+        case "U.S. History":
+            return usHistoryQuestions
+        case "Geography":
+            return geographyQuestions
+        default:
+            return []
+        }
+    }
+    
+    static let algebraQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "Solve for x: 2x + 3 = 7", answer: "2", points: 100),
+        JeopardyQuestion(question: "What is the value of x in the equation x - 5 = 0?", answer: "5", points: 100),
+        JeopardyQuestion(question: "Solve: 3x + 2 = 11", answer: "3", points: 200),
+        JeopardyQuestion(question: "What is x if 4x = 20?", answer: "5", points: 200),
+        JeopardyQuestion(question: "Solve for x: 2(x - 3) = 8", answer: "7", points: 300),
+        JeopardyQuestion(question: "Find x in: 5x = 35", answer: "7", points: 300),
+        JeopardyQuestion(question: "Solve: 3(x + 2) = 18", answer: "4", points: 400),
+        JeopardyQuestion(question: "If 2x + 10 = 18, find x", answer: "4", points: 400),
+        JeopardyQuestion(question: "Solve: 4x - 2 = 14", answer: "4", points: 500),
+        JeopardyQuestion(question: "Find x: 6x + 3 = 39", answer: "6", points: 500)
+    ]
+    
+    static let geometryQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is the sum of the angles in a triangle?", answer: "180 degrees", points: 100),
+        JeopardyQuestion(question: "How many degrees are in a right angle?", answer: "90 degrees", points: 100),
+        JeopardyQuestion(question: "What is the area of a rectangle with length 5 and width 3?", answer: "15", points: 200),
+        JeopardyQuestion(question: "What is the perimeter of a square with side 4?", answer: "16", points: 200),
+        JeopardyQuestion(question: "What is the formula for the area of a circle?", answer: "pi * r^2", points: 300),
+        JeopardyQuestion(question: "Name the longest side of a right triangle.", answer: "Hypotenuse", points: 300),
+        JeopardyQuestion(question: "What is the Pythagorean theorem?", answer: "a^2 + b^2 = c^2", points: 400),
+        JeopardyQuestion(question: "Calculate the area of a triangle with base 6 and height 4.", answer: "12", points: 400),
+        JeopardyQuestion(question: "What is the volume formula for a cylinder?", answer: "pi * r^2 * h", points: 500),
+        JeopardyQuestion(question: "What is the surface area of a cube with side 3?", answer: "54", points: 500)
+    ]
+    
+    static let basicMathQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is 5 + 7?", answer: "12", points: 100),
+        JeopardyQuestion(question: "What is 9 - 4?", answer: "5", points: 100),
+        JeopardyQuestion(question: "What is 8 * 3?", answer: "24", points: 200),
+        JeopardyQuestion(question: "What is 15 / 3?", answer: "5", points: 200),
+        JeopardyQuestion(question: "What is 12 + 15?", answer: "27", points: 300),
+        JeopardyQuestion(question: "What is 20 - 8?", answer: "12", points: 300),
+        JeopardyQuestion(question: "What is 7 * 6?", answer: "42", points: 400),
+        JeopardyQuestion(question: "What is 36 / 6?", answer: "6", points: 400),
+        JeopardyQuestion(question: "What is 25 + 30?", answer: "55", points: 500),
+        JeopardyQuestion(question: "What is 50 - 15?", answer: "35", points: 500)
+    ]
+    
+    static let physicsQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is the acceleration due to gravity on Earth (approx)?", answer: "9.8 m/s^2", points: 100),
+        JeopardyQuestion(question: "What force keeps planets in orbit around the sun?", answer: "Gravity", points: 100),
+        JeopardyQuestion(question: "What is the formula for force?", answer: "mass * acceleration", points: 200),
+        JeopardyQuestion(question: "What is the unit of electrical resistance?", answer: "Ohm", points: 200),
+        JeopardyQuestion(question: "What is Newton's second law?", answer: "F = m * a", points: 300),
+        JeopardyQuestion(question: "What is the speed of light in vacuum?", answer: "299,792 km/s", points: 300),
+        JeopardyQuestion(question: "What phenomenon explains the bending of light?", answer: "Refraction", points: 400),
+        JeopardyQuestion(question: "What is the formula for kinetic energy?", answer: "0.5 * m * v^2", points: 400),
+        JeopardyQuestion(question: "What is the unit of force?", answer: "Newton", points: 500),
+        JeopardyQuestion(question: "Who formulated the laws of motion?", answer: "Isaac Newton", points: 500)
+    ]
+    
+    static let chemistryQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is the chemical symbol for water?", answer: "H2O", points: 100),
+        JeopardyQuestion(question: "What element does 'O' represent?", answer: "Oxygen", points: 100),
+        JeopardyQuestion(question: "What is the periodic table?", answer: "A chart of elements", points: 200),
+        JeopardyQuestion(question: "What is the pH of a neutral solution?", answer: "7", points: 200),
+        JeopardyQuestion(question: "What does Avogadro's number represent?", answer: "Number of particles in a mole", points: 300),
+        JeopardyQuestion(question: "What is the chemical symbol for gold?", answer: "Au", points: 300),
+        JeopardyQuestion(question: "What is the main gas in the Earth's atmosphere?", answer: "Nitrogen", points: 400),
+        JeopardyQuestion(question: "What is an atom?", answer: "The smallest unit of matter", points: 400),
+        JeopardyQuestion(question: "What is the periodic trend of atomic size?", answer: "It decreases across a period", points: 500),
+        JeopardyQuestion(question: "What is the chemical formula for table salt?", answer: "NaCl", points: 500)
+    ]
+    
+    static let biologyQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is the powerhouse of the cell?", answer: "Mitochondria", points: 100),
+        JeopardyQuestion(question: "What carries genetic information?", answer: "DNA", points: 100),
+        JeopardyQuestion(question: "What is the process of cell division in somatic cells?", answer: "Mitosis", points: 200),
+        JeopardyQuestion(question: "What pigment is responsible for photosynthesis?", answer: "Chlorophyll", points: 200),
+        JeopardyQuestion(question: "What organelle is responsible for protein synthesis?", answer: "Ribosome", points: 300),
+        JeopardyQuestion(question: "What is the basic unit of life?", answer: "Cell", points: 300),
+        JeopardyQuestion(question: "What type of biomolecule are enzymes?", answer: "Proteins", points: 400),
+        JeopardyQuestion(question: "What is the process by which plants make food?", answer: "Photosynthesis", points: 400),
+        JeopardyQuestion(question: "What is the human body's largest organ?", answer: "Skin", points: 500),
+        JeopardyQuestion(question: "What is the study of life called?", answer: "Biology", points: 500)
+    ]
+    
+    static let worldHistoryQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "Who was the first emperor of Rome?", answer: "Augustus", points: 100),
+        JeopardyQuestion(question: "Which civilization built the pyramids?", answer: "Egyptians", points: 100),
+        JeopardyQuestion(question: "What was the Renaissance?", answer: "A cultural rebirth in Europe", points: 200),
+        JeopardyQuestion(question: "Who painted the Mona Lisa?", answer: "Leonardo da Vinci", points: 200),
+        JeopardyQuestion(question: "What event started World War I?", answer: "Assassination of Archduke Franz Ferdinand", points: 300),
+        JeopardyQuestion(question: "What was the Silk Road?", answer: "Ancient trade routes", points: 300),
+        JeopardyQuestion(question: "Who was known as the 'Sun King'?", answer: "Louis XIV", points: 400),
+        JeopardyQuestion(question: "What empire was ruled by Genghis Khan?", answer: "Mongol Empire", points: 400),
+        JeopardyQuestion(question: "What was the Cold War?", answer: "A period of geopolitical tension", points: 500),
+        JeopardyQuestion(question: "What ancient civilization built Machu Picchu?", answer: "Inca", points: 500)
+    ]
+    
+    static let usHistoryQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "Who was the first president of the United States?", answer: "George Washington", points: 100),
+        JeopardyQuestion(question: "What document declared America's independence?", answer: "Declaration of Independence", points: 100),
+        JeopardyQuestion(question: "What war was fought between the North and South?", answer: "Civil War", points: 200),
+        JeopardyQuestion(question: "Which U.S. president issued the Emancipation Proclamation?", answer: "Abraham Lincoln", points: 200),
+        JeopardyQuestion(question: "What was the main cause of the Great Depression?", answer: "Stock market crash", points: 300),
+        JeopardyQuestion(question: "What is the U.S. Constitution?", answer: "The supreme law of the United States", points: 300),
+        JeopardyQuestion(question: "Who was the U.S. president during World War II?", answer: "Franklin D. Roosevelt", points: 400),
+        JeopardyQuestion(question: "What movement fought for civil rights in the 1960s?", answer: "Civil Rights Movement", points: 400),
+        JeopardyQuestion(question: "What event triggered the start of the U.S. involvement in WWI?", answer: "Sinking of the Lusitania", points: 500),
+        JeopardyQuestion(question: "Who was the U.S. president during the Cuban Missile Crisis?", answer: "John F. Kennedy", points: 500)
+    ]
+    
+    static let geographyQuestions: [JeopardyQuestion] = [
+        JeopardyQuestion(question: "What is the largest continent?", answer: "Asia", points: 100),
+        JeopardyQuestion(question: "Which country has the largest population?", answer: "China", points: 100),
+        JeopardyQuestion(question: "What is the longest river in the world?", answer: "Nile", points: 200),
+        JeopardyQuestion(question: "What is the capital of France?", answer: "Paris", points: 200),
+        JeopardyQuestion(question: "Which desert is the largest in the world?", answer: "Sahara", points: 300),
+        JeopardyQuestion(question: "What is the highest mountain in the world?", answer: "Mount Everest", points: 300),
+        JeopardyQuestion(question: "Which ocean is the largest?", answer: "Pacific Ocean", points: 400),
+        JeopardyQuestion(question: "What is the smallest country in the world?", answer: "Vatican City", points: 400),
+        JeopardyQuestion(question: "Which country is known as the Land of the Rising Sun?", answer: "Japan", points: 500),
+        JeopardyQuestion(question: "What is the longest coastline in the world?", answer: "Canada", points: 500)
+    ]
+}
+
+
+struct DummyGameView: View {
+    let topic: String
+    let gameNumber: Int
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        ZStack {
+            // Use the same blue–purple gradient
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("Dummy Game \(gameNumber) for \(topic)")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(.white)
+                Text("Game content goes here...")
+                    .foregroundColor(.white)
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+}
+
+
+
+struct WheelGameView: View {
+    let topic: String
+    @Environment(\.dismiss) var dismiss
+    @State private var pointerAngle: Double = 0
+    @State private var selectedGame: String? = nil
+    @State private var spinning = false
+    @State private var gameOptions: [String] = []
+    
+    // Dynamic game options based on subject
+    private func loadGameOptions() {
+        switch topic {
+        case "Algebra":
+            gameOptions = ["Jeopardy", "Car Racer", "Algebra Attack"]
+        case "Biology":
+            gameOptions = ["Jeopardy", "Car Racer", "Cell Explorer", "Wheel Game"]
+        case "U.S. History":
+            gameOptions = ["Jeopardy", "Car Racer", "President Matcher", "Wheel Game"]
+        case "World History":
+            gameOptions = ["Jeopardy", "Car Racer", "Conquer the World", "Wheel Game"]
+        case "Geometry":
+            gameOptions = ["Jeopardy", "Car Racer", "Geo Quizzer", "Wheel Game"]
+        case "Basic Math":
+            gameOptions = ["Jeopardy", "Car Racer", "Math Mania", "Wheel Game"]
+        case "Chemistry":
+            gameOptions = ["Jeopardy", "Car Racer", "Element Explorer", "Wheel Game"]
+        case "Physics":
+            gameOptions = ["Jeopardy", "Car Racer", "Physics Puzzle", "Wheel Game"]
+        case "Geography":
+            gameOptions = ["Jeopardy", "Car Racer", "Pin Drop", "Wheel Game"]
+        case "English":
+            gameOptions = ["Car Racer", "Word Scramble", "Grammar Challenge", "Wheel Game"]
+        default:
+            gameOptions = ["Jeopardy", "Car Racer", "Dummy Game", "Wheel Game"]
+        }
+    }
+    
+    var body: some View {
+        ZStack {
+            // Dark background gradient for strong contrast
+            LinearGradient(gradient: Gradient(colors: [Color.black, Color.gray]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Text("Knowledge Wheel")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.top, 30)
+                    .shadow(radius: 5)
+                
+                ZStack {
+                    // Dark wheel background for better contrast
+                    Circle()
+                        .fill(Color.black.opacity(0.6))
+                        .frame(width: 300, height: 300)
+                        .shadow(radius: 10)
+                    
+                    // Draw each wedge with its label
+                    ForEach(0..<gameOptions.count, id: \.self) { index in
+                        WheelSegment(index: index, count: gameOptions.count, text: gameOptions[index])
+                    }
+                    
+                    // Pointer (white for clarity)
+                    Triangle()
+                        .fill(Color.white)
+                        .frame(width: 20, height: 40)
+                        .offset(y: -150)
+                        .rotationEffect(.degrees(pointerAngle))
+                        .shadow(radius: 5)
+                }
+                .padding(.vertical, 30)
+                
+                VStack(spacing: 15) {
+                    if let game = selectedGame {
+                        Text("Selected Game:")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                        Text(game)
+                            .font(.title.weight(.bold))
+                            .foregroundColor(.yellow)
+                            .transition(.scale)
+                    }
+                    
+                    Button(action: spinWheel) {
+                        Text(spinning ? "Spinning..." : "SPIN WHEEL")
+                            .font(.title2.weight(.bold))
+                            .frame(width: 200, height: 50)
+                            .background(spinning ? Color.gray : Color.white)
+                            .foregroundColor(spinning ? .white : .purple)
+                            .clipShape(Capsule())
+                            .shadow(radius: 5)
+                    }
+                    .disabled(spinning)
+                    .padding(.top)
+                    
+                    if selectedGame != nil {
+                        NavigationLink(destination: destinationView()) {
+                            Text("PLAY NOW")
+                                .font(.headline.weight(.bold))
+                                .padding()
+                                .frame(width: 150)
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .clipShape(Capsule())
+                                .shadow(radius: 5)
+                        }
+                        .transition(.opacity)
+                    }
+                }
+                .animation(.easeInOut, value: selectedGame)
+                
+                Spacer()
+            }
+        }
+        .onAppear(perform: loadGameOptions)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Back") { dismiss() }
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+    
+    private func spinWheel() {
+        withAnimation(.easeOut(duration: 3.0)) {
+            let randomSpins = Double.random(in: 4...6) * 360
+            let segmentAngle = 360 / Double(gameOptions.count)
+            let randomSegment = Double.random(in: 0..<Double(gameOptions.count))
+            pointerAngle += randomSpins + randomSegment * segmentAngle
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            let finalAngle = pointerAngle.truncatingRemainder(dividingBy: 360)
+            let segmentAngle = 360 / Double(gameOptions.count)
+            let selectedIndex = Int(finalAngle / segmentAngle) % gameOptions.count
+            selectedGame = gameOptions[selectedIndex]
+            spinning = false
+        }
+        spinning = true
+        selectedGame = nil
+    }
+    
+    @ViewBuilder
+    private func destinationView() -> some View {
+        switch selectedGame {
+        case "Jeopardy":
+            JeopardyGameView(topic: topic)
+        case "Car Racer":
+            QuestionRacerView(topic: topic)
+        case "Algebra Attack":
+            AlgebraGameView()
+        case "Cell Explorer":
+            CellIdentificationGameView()
+        case "President Matcher":
+            USHistoryMatchGameView()
+        case "Conquer the World":
+            ConquerTheWorldGameView()
+        case "Geo Quizzer":
+            GeometryQuizView(topic:topic)
+        case "Math Mania":
+            MathSpeedGameView()
+        case "Element Explorer":
+            ElementMatchGameView()
+        case "Physics Puzzle":
+            PhysicsPuzzleGameView()
+        case "Pin Drop":
+            CountryPinDropGameView()
+        case "Word Scramble":
+            WordScrambleView()
+        case "Grammar Challenge":
+            GrammarFixItView()
+        default:
+            Text("Select a game")
+        }
+    }
+}
+
+
+struct WheelSegment: View {
+    let index: Int
+    let count: Int
+    let text: String
+    
+    private var rotation: Double { Double(index) * (360 / Double(count)) }
+    private var angle: Double { 360 / Double(count) }
+    private var midAngle: Double { rotation + angle / 2 }
+    
+    // Vibrant gradient using a custom set of colors
+    private var gradient: LinearGradient {
+        let segmentColors: [Color] = [.red, .green, .blue, .orange, .purple, .yellow]
+        return LinearGradient(
+            gradient: Gradient(colors: [
+                segmentColors[index % segmentColors.count],
+                segmentColors[(index + 1) % segmentColors.count]
+            ]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let size = min(geometry.size.width, geometry.size.height)
+            let center = CGPoint(x: size / 2, y: size / 2)
+            let radius = size / 2
+            let labelRadius = radius * 0.6
+            let midAngleRadians = midAngle * .pi / 180
+            let labelX = center.x + labelRadius * cos(midAngleRadians)
+            let labelY = center.y + labelRadius * sin(midAngleRadians)
+            
+            ZStack {
+                Path { path in
+                    path.move(to: center)
+                    path.addArc(center: center,
+                                radius: radius,
+                                startAngle: .degrees(rotation),
+                                endAngle: .degrees(rotation + angle),
+                                clockwise: false)
+                    path.closeSubpath()
+                }
+                .fill(gradient)
+                .overlay(
+                    Path { path in
+                        path.move(to: center)
+                        path.addArc(center: center,
+                                    radius: radius,
+                                    startAngle: .degrees(rotation),
+                                    endAngle: .degrees(rotation + angle),
+                                    clockwise: false)
+                        path.closeSubpath()
+                    }
+                    .stroke(Color.black, lineWidth: 2)
+                )
+                
+                // Place the label in the center of the wedge
+                Text(text)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .position(x: labelX, y: labelY)
+            }
+        }
+    }
+}
+
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.closeSubpath()
+        return path
+    }
+}
+class PointsManager {
+    static let shared = PointsManager()
+    private let defaults = UserDefaults.standard
+    private let key = "subjectPoints"
+    
+    func getPoints(for subject: String) -> Int {
+        let pointsDict = defaults.dictionary(forKey: key) as? [String: Int] ?? [:]
+        return pointsDict[subject] ?? 0
+    }
+    
+    func addPoints(for subject: String, points: Int) {
+        var pointsDict = defaults.dictionary(forKey: key) as? [String: Int] ?? [:]
+        let current = pointsDict[subject] ?? 0
+        pointsDict[subject] = current + points
+        defaults.set(pointsDict, forKey: key)
+    }
+    
+    func resetPoints() {
+        defaults.removeObject(forKey: key)
+    }
+}
