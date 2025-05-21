@@ -1,0 +1,184 @@
+import SwiftUI
+
+struct WorldHistoryQuestion: Identifiable {
+    let id = UUID()
+    let question: String
+    let options: [String]
+    let correctAnswer: String
+}
+
+struct ConquerTheWorldGameView: View {
+    @State private var questions: [WorldHistoryQuestion] = [
+        WorldHistoryQuestion(
+            question: "Which civilization built the pyramids?",
+            options: ["Egyptians", "Romans", "Greeks", "Mayans"],
+            correctAnswer: "Egyptians"
+        ),
+        WorldHistoryQuestion(
+            question: "The Renaissance began in which country?",
+            options: ["Italy", "France", "England", "Germany"],
+            correctAnswer: "Italy"
+        ),
+        WorldHistoryQuestion(
+            question: "Who was the first emperor of Rome?",
+            options: ["Julius Caesar", "Augustus", "Nero", "Caligula"],
+            correctAnswer: "Augustus"
+        ),
+        WorldHistoryQuestion(
+            question: "In which year did the Berlin Wall fall?",
+            options: ["1987", "1989", "1991", "1993"],
+            correctAnswer: "1989"
+        ),
+        WorldHistoryQuestion(
+            question: "Which explorer is credited with discovering America in 1492?",
+            options: ["Vasco da Gama", "Magellan", "Columbus", "Drake"],
+            correctAnswer: "Columbus"
+        ),
+        WorldHistoryQuestion(
+            question: "What was the name of the ship the Pilgrims sailed on?",
+            options: ["Mayflower", "Santa Maria", "Endeavour", "Beagle"],
+            correctAnswer: "Mayflower"
+        ),
+        WorldHistoryQuestion(
+            question: "Which empire built Machu Picchu?",
+            options: ["Aztec", "Inca", "Maya", "Olmec"],
+            correctAnswer: "Inca"
+        ),
+        WorldHistoryQuestion(
+            question: "Who was the leader of the Soviet Union during World War II?",
+            options: ["Lenin", "Stalin", "Trotsky", "Khrushchev"],
+            correctAnswer: "Stalin"
+        ),
+        WorldHistoryQuestion(
+            question: "The Magna Carta was signed in which country?",
+            options: ["France", "Spain", "England", "Germany"],
+            correctAnswer: "England"
+        ),
+        WorldHistoryQuestion(
+            question: "The Ottoman Empire was centered in which modern-day country?",
+            options: ["Greece", "Egypt", "Turkey", "Iran"],
+            correctAnswer: "Turkey"
+        )
+    ].shuffled()
+    
+    @State private var currentQuestionIndex = 0
+    @State private var conqueredTerritories: [String] = []
+    let totalTerritories = 9  // 3 x 3 grid
+    
+    @State private var feedback: String = ""
+    @State private var showFeedback = false
+    @State private var gameOver = false
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Conquer The World")
+                .font(.largeTitle)
+                .bold()
+            
+            if gameOver {
+                Text("Congratulations! You conquered \(conqueredTerritories.count) territories!")
+                    .font(.title2)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                Button("Play Again") {
+                    restartGame()
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+            } else {
+                if currentQuestionIndex < questions.count {
+                    let currentQuestion = questions[currentQuestionIndex]
+                    Text(currentQuestion.question)
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    ForEach(currentQuestion.options, id: \.self) { option in
+                        Button(action: {
+                            answerTapped(option)
+                        }) {
+                            Text(option)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .shadow(radius: 2)
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    if showFeedback {
+                        Text(feedback)
+                            .font(.headline)
+                            .foregroundColor(feedback == "Correct!" ? .green : .red)
+                    }
+                } else {
+                    EmptyView()
+                }
+                
+                Text("World Territories Conquered")
+                    .font(.headline)
+                
+                let columns = [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ]
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(0..<totalTerritories, id: \.self) { index in
+                        Rectangle()
+                            .fill(index < conqueredTerritories.count ? Color.blue : Color.gray.opacity(0.3))
+                            .frame(height: 80)
+                            .overlay(
+                                Text(index < conqueredTerritories.count ? conqueredTerritories[index] : "")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(4)
+                            )
+                    }
+                }
+                .padding()
+            }
+        }
+        .padding()
+    }
+    
+    private func answerTapped(_ answer: String) {
+        let currentQuestion = questions[currentQuestionIndex]
+        if answer == currentQuestion.correctAnswer {
+            feedback = "Correct!"
+            if conqueredTerritories.count < totalTerritories {
+                conqueredTerritories.append(currentQuestion.correctAnswer)
+            }
+        } else {
+            feedback = "Wrong! Correct: \(currentQuestion.correctAnswer)"
+        }
+        showFeedback = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            showFeedback = false
+            currentQuestionIndex += 1
+            if conqueredTerritories.count >= totalTerritories || currentQuestionIndex >= questions.count {
+                gameOver = true
+            }
+        }
+    }
+    
+    private func restartGame() {
+        questions = questions.shuffled()
+        currentQuestionIndex = 0
+        conqueredTerritories = []
+        feedback = ""
+        showFeedback = false
+        gameOver = false
+    }
+}
+
+struct ConquerTheWorldGameView_Previews: PreviewProvider {
+    static var previews: some View {
+        ConquerTheWorldGameView()
+    }
+}
