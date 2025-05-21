@@ -1,0 +1,169 @@
+import SwiftUI
+
+struct AlgebraQuestion: Identifiable {
+    let id = UUID()
+    let question: String
+    let options: [String]
+    let correctAnswer: String
+}
+
+struct AlgebraGameView: View {
+    @State private var questions: [AlgebraQuestion] = [
+        AlgebraQuestion(
+            question: "Solve for x: 2x + 5 = 13",
+            options: ["4", "5", "6", "3"],
+            correctAnswer: "4"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: 3x - 7 = 8",
+            options: ["5", "4", "6", "7"],
+            correctAnswer: "5"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: x/3 = 4",
+            options: ["12", "3", "7", "4"],
+            correctAnswer: "12"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: 4x = 20",
+            options: ["4", "5", "6", "8"],
+            correctAnswer: "5"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: x² - 5x + 6 = 0",
+            options: ["x = 2 or 3", "x = 1 or 6", "x = -2 or -3", "x = 0 or 5"],
+            correctAnswer: "x = 2 or 3"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: x² + x - 12 = 0",
+            options: ["x = 3 or -4", "x = 4 or -3", "x = 2 or -6", "x = 1 or -12"],
+            correctAnswer: "x = 3 or -4"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: 2x² - 8x = 0",
+            options: ["x = 0 or 4", "x = 0 or -4", "x = 2 or 4", "x = 2 or -4"],
+            correctAnswer: "x = 0 or 4"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: x² - 9 = 0",
+            options: ["x = 3 or -3", "x = 0 or 9", "x = 4 or -4", "x = 1 or -9"],
+            correctAnswer: "x = 3 or -3"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: 5x + 2 = 3x + 10",
+            options: ["x = 4", "x = 2", "x = 6", "x = 8"],
+            correctAnswer: "x = 4"
+        ),
+        AlgebraQuestion(
+            question: "Solve for x: 7 - 2x = 1",
+            options: ["x = 3", "x = 2", "x = -3", "x = -2"],
+            correctAnswer: "x = 3"
+        )
+    ]
+    
+    @State private var currentQuestionIndex = 0
+    @State private var score = 0
+    @State private var gameOver = false
+    @State private var showFeedback = false
+    @State private var feedbackText = ""
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [Color.purple, Color.blue]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
+            
+            VStack(spacing: 25) {
+                Text("Algebra Attack!")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(.white)
+                
+                if gameOver {
+                    Text("Game Over!\nFinal Score: \(score)")
+                        .font(.title)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.white)
+                        .padding()
+                    
+                    Button("Play Again") {
+                        restartGame()
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .foregroundColor(.blue)
+                    .cornerRadius(10)
+                } else {
+                    Text(questions[currentQuestionIndex].question)
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
+                        Button(action: {
+                            checkAnswer(selected: option)
+                        }) {
+                            Text(option)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white.opacity(0.8))
+                                .cornerRadius(8)
+                        }
+                        .padding(.horizontal, 30)
+                    }
+                    
+                    if showFeedback {
+                        Text(feedbackText)
+                            .foregroundColor(.yellow)
+                            .font(.headline)
+                            .padding(.top, 10)
+                    }
+                    
+                    Text("Score: \(score)")
+                        .font(.title3)
+                        .foregroundColor(.white)
+                        .padding(.top, 20)
+                }
+            }
+        }
+    }
+    
+    private func checkAnswer(selected: String) {
+        if selected == questions[currentQuestionIndex].correctAnswer {
+            score += 1
+            feedbackText = "Correct!"
+        } else {
+            feedbackText = "Wrong! Answer: \(questions[currentQuestionIndex].correctAnswer)"
+        }
+        showFeedback = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            showFeedback = false
+            nextQuestion()
+        }
+    }
+    
+    private func nextQuestion() {
+        if currentQuestionIndex < questions.count - 1 {
+            currentQuestionIndex += 1
+        } else {
+            gameOver = true
+        }
+    }
+    
+    private func restartGame() {
+        currentQuestionIndex = 0
+        score = 0
+        gameOver = false
+    }
+}
+
+struct AlgebraGameView_Previews: PreviewProvider {
+    static var previews: some View {
+        AlgebraGameView()
+    }
+}
