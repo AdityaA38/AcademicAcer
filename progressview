@@ -1,0 +1,115 @@
+//
+//  ProgressView.swift
+//  AcademicAcer
+//
+//
+
+import Foundation
+import SwiftUI
+
+struct SubjectProgressView: View {
+    let subject: String
+    @State private var totalPoints = 0
+    private let badgeThresholds = [100, 200, 300, 500]
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color.blue, Color.purple]),
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Text("\(subject) Progress")
+                    .font(.largeTitle)
+                    .foregroundColor(.white)
+                    .padding(.top)
+                
+                Text("Total Points: \(totalPoints)")
+                    .font(.title)
+                    .foregroundColor(.white)
+                
+                BadgeGridView(subject: subject, points: totalPoints)
+                    .padding()
+                
+                ShareLink(item: "I scored \(totalPoints) points in \(subject)! Check out AcademicAcer!") {
+                    Label("Share Your Score", systemImage: "square.and.arrow.up")
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+                
+                Spacer()
+            }
+        }
+        .onAppear {
+            totalPoints = PointsManager.shared.getPoints(for: subject)
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Back") {
+                    dismiss()
+                }
+                .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+struct BadgeGridView: View {
+    let subject: String
+    let points: Int
+    let thresholds = [100, 200, 300, 500]
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            Text("Badges")
+                .font(.title2)
+                .foregroundColor(.white)
+                .padding(.bottom)
+            
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible()), count: 2),
+                spacing: 20
+            ) {
+                ForEach(thresholds, id: \.self) { threshold in
+                    VStack {
+                        Image(systemName: "shield.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 60, height: 60)
+                            .foregroundColor(points >= threshold ? badgeColor(for: threshold) : .gray)
+                        
+                        Text("\(threshold) pts")
+                            .foregroundColor(.white)
+                        
+                        if points < threshold {
+                            Text("\(threshold - points) to go")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.7))
+                        } else {
+                            Text("Unlocked!")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(15)
+    }
+    
+    func badgeColor(for threshold: Int) -> Color {
+        switch threshold {
+        case 100: return .brown
+        case 200: return .gray
+        case 300: return .yellow
+        case 500: return .blue
+        default: return .primary
+        }
+    }
+}
