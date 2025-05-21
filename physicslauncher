@@ -1,0 +1,174 @@
+import SwiftUI
+
+struct PhysicsPuzzleGameView: View {
+    @State private var angle: Double = 45
+    @State private var power: Double = 50
+    @State private var simulationTime: Double = 0
+    @State private var projectilePosition: CGPoint = .zero
+    @State private var simulationActive = false
+    @State private var showResultAlert = false
+    @State private var resultMessage = ""
+    @State private var score: Int = 0
+    @State private var triesRemaining: Int = 10
+    @State private var gameOver: Bool = false
+    @State private var currentSize: CGSize = .zero
+    @State private var targetPosition: CGPoint = .zero
+    @State private var targetSize: CGFloat = 40
+
+    let gravity: Double = 9.8
+    let timerInterval: Double = 0.02
+    let projectileRadius: CGFloat = 10
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.black, Color.gray]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: targetSize, height: targetSize)
+                    .position(targetPosition)
+
+                Circle()
+                    .fill(Color.yellow)
+                    .frame(width: projectileRadius * 2, height: projectileRadius * 2)
+                    .position(projectilePosition)
+
+                VStack {
+                    Spacer()
+
+                    Text("Score: \(score)  Tries Left: \(triesRemaining)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    VStack(spacing: 15) {
+                        HStack {
+                            Text("Angle: \(Int(angle))°")
+                            Slider(value: $angle, in: 10...80, step: 1)
+                        }
+                        .padding(.horizontal)
+
+                        HStack {
+                            Text("Power: \(Int(power))")
+                            Slider(value: $power, in: 10...100, step: 1)
+                        }
+                        .padding(.horizontal)
+
+                        Button(action: {
+                            startSimulation()
+                        }) {
+                            Text(simulationActive ? "In Flight..." : "Launch!")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(simulationActive ? Color.gray : Color.blue)
+                                .cornerRadius(10)
+                        }
+                        .disabled(simulationActive)
+                        .padding(.horizontal)
+                    }
+                    .padding()
+                    .background(Color.white.opacity(0.8))
+                    .cornerRadius(15)
+                    .padding()
+                }
+            }
+            .onAppear {
+                currentSize = geo.size
+                newGame(in: geo.size)
+            }
+            .alert(isPresented: $showResultAlert) {
+                Alert(
+                    title: Text("Result"),
+                    message: Text(resultMessage),
+                    dismissButton: .default(Text(gameOver ? "Play Again" : "Next")) {
+                        if gameOver {
+                            newGame(in: currentSize)
+                        } else {
+                            resetTurn(in: currentSize)
+                        }
+                    }
+                )
+            }
+        }
+    }
+
+    private func startSimulation() {
+        simulationTime = 0
+        projectilePosition = CGPoint(x: 50, y: currentSize.height - 50)
+        simulationActive = true
+
+        Timer.scheduledTimer(withTimeInterval: timerInterval, repeats: true) { timer in
+            simulationTime += timerInterval
+
+            let radianAngle = angle * Double.pi / 180
+            let initialX: Double = 50
+            let initialY: Double = Double(currentSize.height - 50)
+
+            let x = initialX + power * cos(radianAngle) * simulationTime
+            let y = initialY - (power * sin(radianAngle) * simulationTime - 0.5 * gravity * simulationTime * simulationTime)
+
+            projectilePosition = CGPoint(x: x, y: y)
+
+            let dx = x - Double(targetPosition.x)
+            let dy = y - Double(targetPosition.y)
+            let distance = sqrt(dx*dx + dy*dy)
+            let collisionThreshold = Double(projectileRadius + targetSize/2)
+
+            if distance < collisionThreshold && simulationActive {
+                timer.invalidate()
+                simulationActive = false
+                score += 1
+                triesRemaining -= 1
+                if triesRemaining == 0 {
+                    gameOver = true
+                    resultMessage = "Game Over! Your final score is \(score). Congrats!"
+                } else {
+                    resultMessage = "You hit the target! Score: \(score), Tries left: \(triesRemaining)"
+                }
+                showResultAlert = true
+            }
+
+            if (x > Double(currentSize.width) || y > Double(currentSize.height) || y < 0) && simulationActive {
+                timer.invalidate()
+                simulationActive = false
+                triesRemaining -= 1
+                if triesRemaining == 0 {
+                    gameOver = true
+                    resultMessage = "Game Over! Your final score is \(score)."
+                } else {
+                    resultMessage = "You missed the target. Tries left: \(triesRemaining)"
+                }
+                showResultAlert = true
+            }
+        }
+    }
+
+    private func resetTurn(in size: CGSize) {
+        simulationActive = false
+        simulationTime = 0
+        projectilePosition = CGPoint(x: 50, y: size.height - 50)
+        let targetX = Double.random(in: Double(size.width / 2)...Double(size.width - 50))
+        let targetY = Double.random(in: 100...Double(size.height - 150))
+        targetPosition = CGPoint(x: targetX, y: targetY)
+    }
+
+    private func newGame(in size: CGSize) {
+        score = 0
+        triesRemaining = 10
+        gameOver = false
+        resetTurn(in: size)
+    }
+}
+
+struct PhysicsPuzzleGameView_Previews: PreviewProvider {
+    static var previews: some View {
+        PhysicsPuzzleGameView()
+    }
+}
