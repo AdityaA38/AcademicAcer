@@ -1,0 +1,166 @@
+import SwiftUI
+
+struct ElementCard: Identifiable {
+    let id = UUID()
+    let matchID: Int
+    let cardType: ElementCardType
+    let content: String
+    var isFlipped: Bool = false
+    var isMatched: Bool = false
+    
+}
+
+enum ElementCardType {
+    case symbol
+    case name
+}
+
+func createElementDeck() -> [ElementCard] {
+    // Element data: matchID, symbol, and name
+    let elementsData = [
+        (matchID: 1, symbol: "H", name: "Hydrogen"),
+        (matchID: 2, symbol: "He", name: "Helium"),
+        (matchID: 3, symbol: "Li", name: "Lithium"),
+        (matchID: 4, symbol: "Be", name: "Beryllium"),
+        (matchID: 5, symbol: "B", name: "Boron"),
+        (matchID: 6, symbol: "C", name: "Carbon"),
+        (matchID: 7, symbol: "N", name: "Nitrogen"),
+        (matchID: 8, symbol: "O", name: "Oxygen"),
+        (matchID: 9, symbol: "F", name: "Fluorine"),
+        (matchID: 10, symbol: "Ne", name: "Neon")
+    ]
+    
+    var deck: [ElementCard] = []
+    for data in elementsData {
+        let symbolCard = ElementCard(matchID: data.matchID, cardType: .symbol, content: data.symbol)
+        let nameCard = ElementCard(matchID: data.matchID, cardType: .name, content: data.name)
+        deck.append(symbolCard)
+        deck.append(nameCard)
+    }
+    return deck.shuffled()
+}
+
+struct ElementMatchGameView: View {
+    @State private var deck: [ElementCard] = createElementDeck()
+    @State private var selectedIndices: [Int] = []
+    @State private var matchesFound = 0
+    
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.7)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
+            
+            VStack {
+                Text("Element Match-Up!")
+                    .font(.largeTitle)
+                    .bold()
+                    .foregroundColor(.white)
+                    .padding()
+                
+                if matchesFound == 10 {
+                    Text("Congratulations! You matched all elements!")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding()
+                    Button("Play Again") {
+                        resetGame()
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .foregroundColor(.blue)
+                    .cornerRadius(10)
+                }
+                
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(deck.indices, id: \.self) { index in
+                        let card = deck[index]
+                        ElementCardView(card: card)
+                            .onTapGesture {
+                                cardTapped(at: index)
+                            }
+                    }
+                }
+                .padding()
+            }
+        }
+    }
+    
+    private func cardTapped(at index: Int) {
+        if deck[index].isFlipped || deck[index].isMatched { return }
+        
+        deck[index].isFlipped = true
+        selectedIndices.append(index)
+        
+        if selectedIndices.count == 2 {
+            let firstIndex = selectedIndices[0]
+            let secondIndex = selectedIndices[1]
+            let firstCard = deck[firstIndex]
+            let secondCard = deck[secondIndex]
+            
+            if firstCard.matchID == secondCard.matchID &&
+                firstCard.cardType != secondCard.cardType {
+                deck[firstIndex].isMatched = true
+                deck[secondIndex].isMatched = true
+                matchesFound += 1
+
+                PointsManager.shared.addPoints(for: "Chemistry", points: 1)
+
+                selectedIndices.removeAll()
+            } else {
+                // Not a match: flip back after delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    deck[firstIndex].isFlipped = false
+                    deck[secondIndex].isFlipped = false
+                    selectedIndices.removeAll()
+                }
+            }
+        }
+    }
+    
+    private func resetGame() {
+        deck = createElementDeck()
+        selectedIndices = []
+        matchesFound = 0
+    }
+}
+
+struct ElementCardView: View {
+    let card: ElementCard
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(card.isMatched ? Color.green.opacity(0.7) : Color.white)
+            if card.isFlipped || card.isMatched {
+                Text(card.content)
+                    .font(.title)
+                    .foregroundColor(.black)
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.blue)
+                Text("?")
+                    .font(.largeTitle)
+                    .foregroundColor(.white)
+            }
+        }
+        .frame(height: 100)
+        .shadow(radius: 4)
+        .animation(.default, value: card.isFlipped)
+    }
+}
+
+struct ElementMatchGameView_Previews: PreviewProvider {
+    static var previews: some View {
+        ElementMatchGameView()
+    }
+}
