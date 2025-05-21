@@ -1,0 +1,132 @@
+import SwiftUI
+import MapKit
+import CoreLocation
+
+struct Country {
+    let name: String
+    let coordinate: CLLocationCoordinate2D
+    
+}
+
+struct MapViewRepresentable: UIViewRepresentable {
+    @Binding var region: MKCoordinateRegion
+    var onTap: (CLLocationCoordinate2D) -> Void
+    
+    class Coordinator: NSObject, MKMapViewDelegate {
+        var parent: MapViewRepresentable
+        
+        init(parent: MapViewRepresentable) {
+            self.parent = parent
+        }
+        
+        @objc func handleTap(gestureRecognizer: UITapGestureRecognizer) {
+            let mapView = gestureRecognizer.view as! MKMapView
+            let tapPoint = gestureRecognizer.location(in: mapView)
+            let coordinate = mapView.convert(tapPoint, toCoordinateFrom: mapView)
+            parent.onTap(coordinate)
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+    
+    func makeUIView(context: Context) -> MKMapView {
+        let mapView = MKMapView(frame: .zero)
+        mapView.delegate = context.coordinator
+        mapView.setRegion(region, animated: false)
+        
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(gestureRecognizer:)))
+        mapView.addGestureRecognizer(tapGesture)
+        
+        return mapView
+    }
+    
+    func updateUIView(_ uiView: MKMapView, context: Context) {
+        uiView.setRegion(region, animated: true)
+    }
+}
+
+struct CountryPinDropGameView: View {
+    @State private var score = 0
+    @State private var currentCountry: Country?
+    
+    @State private var countries: [Country] = [
+        Country(name: "China", coordinate: CLLocationCoordinate2D(latitude: 35.8617, longitude: 104.1954)),
+        Country(name: "Brazil", coordinate: CLLocationCoordinate2D(latitude: -14.2350, longitude: -51.9253)),
+        Country(name: "Japan", coordinate: CLLocationCoordinate2D(latitude: 36.2048, longitude: 138.2529)),
+        Country(name: "Australia", coordinate: CLLocationCoordinate2D(latitude: -25.2744, longitude: 133.7751)),
+        Country(name: "Canada", coordinate: CLLocationCoordinate2D(latitude: 56.1304, longitude: -106.3468)),
+        Country(name: "India", coordinate: CLLocationCoordinate2D(latitude: 20.5937, longitude: 78.9629)),
+        Country(name: "Germany", coordinate: CLLocationCoordinate2D(latitude: 51.1657, longitude: 10.4515)),
+        Country(name: "South Africa", coordinate: CLLocationCoordinate2D(latitude: -30.5595, longitude: 22.9375)),
+        Country(name: "Mexico", coordinate: CLLocationCoordinate2D(latitude: 23.6345, longitude: -102.5528)),
+        Country(name: "Russia", coordinate: CLLocationCoordinate2D(latitude: 61.5240, longitude: 105.3188))
+    ]
+    
+    @State private var region = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 20, longitude: 0),
+        span: MKCoordinateSpan(latitudeDelta: 100, longitudeDelta: 100)
+    )
+    
+    var body: some View {
+        VStack {
+            Text("Score: \(score)")
+                .font(.title)
+                .padding()
+            
+            if let country = currentCountry {
+                Text("Tap on: \(country.name)")
+                    .font(.headline)
+                    .padding()
+            } else {
+                Text("Game Over!")
+                    .font(.headline)
+                    .padding()
+            }
+            
+            MapViewRepresentable(region: $region, onTap: { tappedCoordinate in
+                checkAnswer(tappedCoordinate: tappedCoordinate)
+            })
+            .frame(height: 300)
+            .cornerRadius(10)
+            .padding()
+            
+            Button("Next Country") {
+                nextCountry()
+            }
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+        }
+        .onAppear {
+            nextCountry()
+        }
+    }
+    
+    private func nextCountry() {
+        if !countries.isEmpty {
+            currentCountry = countries.removeFirst()
+        } else {
+            currentCountry = nil
+        }
+    }
+    
+    private func checkAnswer(tappedCoordinate: CLLocationCoordinate2D) {
+        guard let country = currentCountry else { return }
+        let target = country.coordinate
+        let tapLocation = CLLocation(latitude: tappedCoordinate.latitude, longitude: tappedCoordinate.longitude)
+        let targetLocation = CLLocation(latitude: target.latitude, longitude: target.longitude)
+        let distance = tapLocation.distance(from: targetLocation)
+        
+        if distance < 500000 {
+            score += 1
+            PointsManager.shared.addPoints(for: "Geography", points: 1)
+
+        }
+        
+        
+        nextCountry()
+    }
+}
