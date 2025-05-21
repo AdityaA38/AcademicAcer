@@ -1,0 +1,268 @@
+import SwiftUI
+struct QuestionRacerView: View {
+    let topic: String
+    @Environment(\.dismiss) var dismiss
+    @State private var questions = QuestionBank.questions(for: "")
+    @State private var currentQuestionIndex = 0
+    @State private var userAnswer = ""
+    @State private var score = 0
+    @State private var carPosition: CGFloat = 0
+    @State private var gameOver = false
+    
+    private let trackWidth: CGFloat = UIScreen.main.bounds.width - 40
+    private let maxCarPosition: CGFloat = UIScreen.main.bounds.width - 110
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(gradient: Gradient(colors: [Color(red: 0.35, green: 0.78, blue: 0.98),
+                                                                   Color(red: 0.82, green: 0.95, blue: 1.0)]),
+                                       startPoint: .top, endPoint: .bottom)
+                            .ignoresSafeArea()
+            
+            VStack(spacing: 30) {
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 10)
+                        .frame(width: trackWidth, height: 30)
+                        .foregroundColor(.gray)
+                    
+                    RoundedRectangle(cornerRadius: 3)
+                        .frame(width: 10, height: 30)
+                        .foregroundColor(.yellow)
+                        .offset(x: trackWidth - 20)
+                    
+                    Image("redcar1")
+                        .frame(width:2, height:2)
+                        .foregroundColor(.red)
+                        .offset(x: carPosition)
+                }
+                .padding(.horizontal)
+                
+                VStack(spacing: 20) {
+                    if currentQuestionIndex < questions.count {
+                        Text(questions[currentQuestionIndex].question)
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(10)
+                        
+                        TextField("Your answer...", text: $userAnswer)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        
+                        Button("Submit Answer") {
+                            checkAnswer()
+                        }
+                        .disabled(userAnswer.isEmpty)
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.purple)
+                        .clipShape(Capsule())
+                    }
+                    
+                    Text("Progress: \(currentQuestionIndex)/10")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+            }
+        }
+        .onAppear {
+            questions = QuestionBank.questions(for: topic)
+        }
+        .alert("Race Complete!", isPresented: $gameOver) {
+            Button("Exit") { dismiss() }
+        } message: {
+            Text("Final Score: \(score)/100\nGreat job!")
+            .onDisappear {
+                PointsManager.shared.addPoints(for: topic, points: score)
+            }
+        }
+    }
+    
+    private func checkAnswer() {
+        let correctAnswer = questions[currentQuestionIndex].answer.lowercased().trimmingCharacters(in: .whitespaces)
+        let userAnswer = userAnswer.lowercased().trimmingCharacters(in: .whitespaces)
+        
+        if userAnswer == correctAnswer {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                carPosition += (maxCarPosition / 10)
+                score += 10
+            }
+            
+            if currentQuestionIndex < 9 {
+                currentQuestionIndex += 1
+            } else {
+                gameOver = true
+                
+            }
+            
+        }
+        
+        self.userAnswer = ""
+    }
+    
+    private func resetGame() {
+        currentQuestionIndex = 0
+        score = 0
+        carPosition = 0
+        userAnswer = ""
+        gameOver = false
+        questions.shuffle()
+    }
+}
+
+struct QuestionBank {
+    static func questions(for topic: String) -> [Question] {
+        switch topic {
+        case "Algebra":
+            return [
+                Question(question: "Solve for x: 2x + 5 = 15", answer: "5"),
+                Question(question: "What is 3² + 4²?", answer: "25"),
+                Question(question: "Simplify: 3(x + 4) - 2x", answer: "x + 12"),
+                Question(question: "What is 15% of 200?", answer: "30"),
+                Question(question: "Solve: 8 - (2 × 3) + 7", answer: "9"),
+                Question(question: "Convert 3/4 to decimal", answer: "0.75"),
+                Question(question: "What is the square root of 144?", answer: "12"),
+                Question(question: "Calculate 5!", answer: "120"),
+                Question(question: "Solve: 2³ × 3²", answer: "72"),
+                Question(question: "What is the standard form of the Quadratic Equation?", answer: "ax^2 + bx + c")
+            ]
+            
+        case "Biology":
+            return [
+                Question(question: "Powerhouse of the cell", answer: "Mitochondria"),
+                Question(question: "Photosynthesis pigment", answer: "Chlorophyll"),
+                Question(question: "Basic unit of life", answer: "Cell"),
+                Question(question: "Number of chambers in human heart", answer: "4"),
+                Question(question: "Gas plants absorb", answer: "Carbon dioxide"),
+                Question(question: "Largest human organ", answer: "Skin"),
+                Question(question: "Blood component carries oxygen", answer: "Red blood cells"),
+                Question(question: "Scientific study of plants", answer: "Botany"),
+                Question(question: "DNA structure name", answer: "Double helix"),
+                Question(question: "Process of cell division", answer: "Mitosis")
+            ]
+            
+        case "U.S. History":
+            return [
+                Question(question: "First U.S. president", answer: "George Washington"),
+                Question(question: "Year the Declaration of Independence was signed", answer: "1776"),
+                Question(question: "Civil War start year", answer: "1861"),
+                Question(question: "President during Great Depression and WWII", answer: "Franklin Roosevelt"),
+                Question(question: "Number of original colonies", answer: "13"),
+                Question(question: "Amendment abolishing slavery", answer: "13th"),
+                Question(question: "1969 moon landing mission", answer: "Apollo 11"),
+                Question(question: "Women's suffrage amendment", answer: "19th"),
+                Question(question: "Civil rights leader 'I Have a Dream'", answer: "Martin Luther King Jr."),
+                Question(question: "9/11 attack year", answer: "2001")
+            ]
+            
+        case "World History":
+            return [
+                Question(question: "Ancient Egyptian writing system", answer: "Hieroglyphics"),
+                Question(question: "Greek philosopher sentenced to drink poison", answer: "Socrates"),
+                Question(question: "Year World War I began", answer: "1914"),
+                Question(question: "Site of Napoleon's final defeat", answer: "Waterloo"),
+                Question(question: "First country to use paper money", answer: "China"),
+                Question(question: "Document signed in 1215 limiting royal power", answer: "Magna Carta"),
+                Question(question: "Fall of Berlin Wall year", answer: "1989"),
+                Question(question: "Ancient civilization of Machu Picchu", answer: "Inca"),
+                Question(question: "Chinese dynasty that built the Great Wall", answer: "Ming"),
+                Question(question: "First man in space", answer: "Yuri Gagarin")
+            ]
+            
+        case "Geometry":
+            return [
+                Question(question: "Number of sides in a hexagon", answer: "6"),
+                Question(question: "Triangle with all sides equal", answer: "Equilateral"),
+                Question(question: "Formula for area of circle", answer: "πr²"),
+                Question(question: "Angles summing to 180°", answer: "Supplementary"),
+                Question(question: "3D shape of a soda can", answer: "Cylinder"),
+                Question(question: "Pythagorean theorem formula", answer: "a² + b² = c²"),
+                Question(question: "Number of degrees in a circle", answer: "360"),
+                Question(question: "Quadrilateral with one pair of parallel sides", answer: "Trapezoid"),
+                Question(question: "Volume of cube with 3cm sides", answer: "27"),
+                Question(question: "Lines that never meet", answer: "Parallel")
+            ]
+            
+        case "Basic Math":
+            return [
+                Question(question: "7 × 8", answer: "56"),
+                Question(question: "15 - 9", answer: "6"),
+                Question(question: "Next number: 2, 4, 6, __", answer: "8"),
+                Question(question: "Number of sides on a pentagon", answer: "5"),
+                Question(question: "25 ÷ 5", answer: "5"),
+                Question(question: "10²", answer: "100"),
+                Question(question: "1/4 + 1/4", answer: "1/2"),
+                Question(question: "Minutes in an hour", answer: "60"),
+                Question(question: "Cents in a quarter", answer: "25"),
+                Question(question: "Days in a week", answer: "7")
+            ]
+            
+        case "Chemistry":
+            return [
+                Question(question: "Chemical symbol for gold", answer: "Au"),
+                Question(question: "Atomic number of carbon", answer: "6"),
+                Question(question: "H2O common name", answer: "Water"),
+                Question(question: "PH of pure water", answer: "7"),
+                Question(question: "Noble gas in period 1", answer: "Helium"),
+                Question(question: "Process of liquid turning to gas", answer: "Evaporation"),
+                Question(question: "CO2 chemical name", answer: "Carbon dioxide"),
+                Question(question: "Most abundant gas in atmosphere", answer: "Nitrogen"),
+                Question(question: "Photosynthesis formula", answer: "6CO2 + 6H2O → C6H12O6 + 6O2"),
+                Question(question: "Acid in vinegar", answer: "Acetic acid")
+            ]
+            
+        case "Physics":
+            return [
+                Question(question: "SI unit of force", answer: "Newton"),
+                Question(question: "Acceleration due to gravity", answer: "9.8 m/s^2"),
+                Question(question: "Energy of motion", answer: "Kinetic"),
+                Question(question: "First law of motion", answer: "Inertia"),
+                Question(question: "Speed of light (m/s)", answer: "3×10⁸"),
+                Question(question: "Current unit", answer: "Ampere"),
+                Question(question: "Mirror that converges light", answer: "Concave"),
+                Question(question: "Charge of proton", answer: "Positive"),
+                Question(question: "Energy unit", answer: "Joule"),
+                Question(question: "Force = mass × __", answer: "Acceleration")
+            ]
+            
+        case "World Geography":
+            return [
+                Question(question: "Capital of Japan", answer: "Tokyo"),
+                Question(question: "Largest country by area", answer: "Russia"),
+                Question(question: "Capital of Brazil", answer: "Brasília"),
+                Question(question: "River through Egypt", answer: "Nile"),
+                Question(question: "Capital of Australia", answer: "Canberra"),
+                Question(question: "Continent with Sahara Desert", answer: "Africa"),
+                Question(question: "Capital of Canada", answer: "Ottawa"),
+                Question(question: "Tallest mountain", answer: "Mount Everest"),
+                Question(question: "Capital of France", answer: "Paris"),
+                Question(question: "Country known as Land of Rising Sun", answer: "Japan")
+            ]
+            
+        case "English":
+            return [
+                Question(question: "The ______ of summer (metaphor/metaphor)", answer: "metaphor"),
+                Question(question: "'Romeo and Juliet' author", answer: "Shakespeare"),
+                Question(question: "Past tense of 'run'", answer: "ran"),
+                Question(question: "Word modifying a verb", answer: "Adverb"),
+                Question(question: "'The' is what type of article?", answer: "Definite"),
+                Question(question: "Opposite of 'synonym'", answer: "Antonym"),
+                Question(question: "Literary device: 'The wind whispered'", answer: "Personification"),
+                Question(question: "Plural of 'ox'", answer: "oxen"),
+                Question(question: "Homophone for 'flower'", answer: "flour"),
+                Question(question: "Main idea of a story", answer: "Theme")
+            ]
+            
+        default:
+            return (1...10).map {
+                Question(question: "Sample Question \($0)", answer: "Answer \($0)")
+            }
+        }
+    }
+    
+    struct Question {
+        let question: String
+        let answer: String
+    }
+}
