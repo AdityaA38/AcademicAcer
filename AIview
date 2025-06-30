@@ -1,0 +1,212 @@
+import SwiftUI
+
+struct AIQuestionView: View {
+    @State private var question: AIQuestion?
+    var subject: String
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("🔮 AI Challenge")
+                .font(.largeTitle)
+                .bold()
+
+            if let question = question {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(question.question)
+                        .font(.title3)
+                        .padding()
+
+                    ForEach(question.choices, id: \.self) { option in
+                        Text("• \(option)")
+                    }
+
+                }
+            } else {
+                Text("Loading question...")
+                    .padding()
+            }
+
+            Spacer()
+        }
+        .padding()
+        .onAppear {
+            AIQuestionService.shared.generateAIQuestions(for: subject, difficulty: "medium", count: 1) { result in
+                DispatchQueue.main.async {
+                    self.question = result?.first
+                }
+            }
+        }
+    }
+}
+
+
+struct AIQuizSubjectPickerView: View {
+    @State private var selectedSubject: String? = nil
+
+    let subjects = ["Math", "Science", "History", "English", "Geography"]
+
+    var body: some View {
+        VStack(spacing: 30) {
+            Text("Pick a Subject for AI Quiz")
+                .font(.largeTitle)
+                .bold()
+                .padding(.top, 40)
+
+            ForEach(subjects, id: \.self) { subject in
+                NavigationLink(destination: AIQuestionView(subject: subject)) {
+                    Text(subject)
+                        .font(.title2)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue.opacity(0.7))
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal)
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+    }
+}
+
+struct CustomAIQuizFormView: View {
+    @State private var subject = "Algebra"
+    @State private var difficulty = "Medium"
+    @State private var numberOfQuestions = 5
+    @State private var questions: [AIQuestion] = []
+    @State private var isLoading = false
+    @State private var showQuiz = false
+
+    let subjects = ["Algebra", "Geometry", "Physics", "Chemistry", "Biology", "World History", "U.S. History", "Geography"]
+    let difficulties = ["Easy", "Medium", "Hard"]
+
+    var body: some View {
+        VStack(spacing: 25) {
+            Text("🎯 Customize Your AI Quiz")
+                .font(.title)
+                .bold()
+
+            Picker("Subject", selection: $subject) {
+                ForEach(subjects, id: \.self) { Text($0) }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .padding(.horizontal)
+
+            Picker("Difficulty", selection: $difficulty) {
+                ForEach(difficulties, id: \.self) { Text($0) }
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .padding(.horizontal)
+
+            Stepper("Number of Questions: \(numberOfQuestions)", value: $numberOfQuestions, in: 1...10)
+                .padding(.horizontal)
+
+            if isLoading {
+                ProgressView("Generating quiz...")
+                    .padding()
+            } else {
+                Button("Start Quiz") {
+                    generateQuiz()
+                }
+                .font(.headline)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.green.opacity(0.8))
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .navigationDestination(isPresented: $showQuiz) {
+            InteractiveAIQuizView(questions: questions)
+        }
+    }
+
+    private func generateQuiz() {
+        isLoading = true
+        AIQuestionService.shared.generateAIQuestions(for: subject, difficulty: difficulty, count: numberOfQuestions) { result in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                if let result = result {
+                    self.questions = result
+                    self.showQuiz = true
+                } else {
+                    // fallback in case of failure
+                    self.questions = []
+                }
+            }
+        }
+    }
+}
+import SwiftUI
+
+struct InteractiveAIQuizView: View {
+    let questions: [AIQuestion]
+    @State private var currentIndex = 0
+    @State private var score = 0
+    @State private var showResult = false
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack {
+            if showResult {
+                Text("🎉 Quiz Finished!")
+                    .font(.largeTitle)
+                Text("Score: \(score)/\(questions.count)")
+                    .font(.title2)
+                    .padding()
+
+                Button("Back to Custom Quiz") {
+                    dismiss()
+                }
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+            } else {
+                let question = questions[currentIndex]
+
+                Text("Question \(currentIndex + 1)/\(questions.count)")
+                    .font(.headline)
+                    .padding(.bottom, 5)
+
+                Text(question.question)
+                    .font(.title2)
+                    .padding()
+
+                ForEach(0..<question.choices.count, id: \.self) { index in
+                    Button(question.choices[index]) {
+                        if index == question.correctIndex {
+                            score += 1
+                        }
+                        nextQuestion()
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                }
+            }
+        }
+        .padding()
+    }
+
+    private func nextQuestion() {
+        if currentIndex + 1 < questions.count {
+            currentIndex += 1
+        } else {
+            showResult = true
+        }
+    }
+}
+
+
+
+
